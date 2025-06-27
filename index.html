@@ -2,59 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dreamgirl AR Viewer</title>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <title>Kivicube AR Scene</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
+    html, body {
       margin: 0;
-      background: #222;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
-    header {
-      margin-top: 2rem;
-      margin-bottom: 1rem;
-    }
-    model-viewer {
+      padding: 0;
       width: 100vw;
-      max-width: 600px;
-      height: 70vh;
-      background: #333;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      height: 100vh;
+      background: #181818;
+    }
+    .ar-embed {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    iframe {
+      width: 90vw;
+      height: 90vh;
+      max-width: 900px;
+      max-height: 90vh;
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 4px 32px #000a;
+      background: #222;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Original Dreamgirl AR</h1>
-    <p>Tap "View in your space" to place the animation in your environment.</p>
-  </header>
-
-  <!-- Replace 'model.glb' with your model filename -->
-  <model-viewer
-    src="model.glb"
-    alt="Dreamgirl Animation"
-    ar
-    ar-modes="scene-viewer webxr quick-look"
-    camera-controls
-    auto-rotate
-    shadow-intensity="1"
-    exposure="1"
-    style="background: #222;">
-    <button slot="ar-button" style="position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); padding: 12px 24px; font-size: 1rem;">
-      View in your space
-    </button>
-  </model-viewer>
-
-  <footer style="margin-top: 2rem;">
-    <small>
-      Works best on mobile devices supporting AR (Android Chrome, iOS Safari).<br>
-      Replace <b>model.glb</b> with your uploaded 3D model file.
-    </small>
-  </footer>
+  <div class="ar-embed">
+    <iframe
+      src="https://www.kivicube.com/scenes/C4IVj83HKF2756J22KLLUy8SJF4j00lU"
+      allow="camera; gyroscope; accelerometer; fullscreen"
+      title="Kivicube AR Scene"
+      loading="lazy">
+    </iframe>
+  </div>
 </body>
 </html>
