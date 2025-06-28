@@ -2,43 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Kivicube AR Scene</title>
+  <title>Original Dreamgirl AR</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 8th Wall or mindar.js are popular for web AR, but we'll use model-viewer for simplicity and browser compatibility -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: sans-serif;
+    }
+    .overlay-text {
+      position: absolute;
+      top: 10vw;
+      left: 0;
+      width: 100vw;
+      text-align: center;
+      color: #fff;
+      font-size: 8vw;
+      font-weight: bold;
+      text-shadow: 0 2px 16px #000, 0 4px 32px #333;
+      pointer-events: none;
+      z-index: 10;
+      font-family: 'Arial Black', Arial, sans-serif;
+    }
+    model-viewer {
       width: 100vw;
       height: 100vh;
-      background: #181818;
-    }
-    .ar-embed {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    iframe {
-      width: 90vw;
-      height: 90vh;
-      max-width: 900px;
-      max-height: 90vh;
-      border: none;
-      border-radius: 20px;
-      box-shadow: 0 4px 32px #000a;
-      background: #222;
+      --progress-bar-color: #ff69b4;
     }
   </style>
 </head>
 <body>
-  <div class="ar-embed">
-    <iframe
-      src="https://www.kivicube.com/scenes/C4IVj83HKF2756J22KLLUy8SJF4j00lU"
-      allow="camera; gyroscope; accelerometer; fullscreen"
-      title="Kivicube AR Scene"
-      loading="lazy">
-    </iframe>
-  </div>
+  <div class="overlay-text">Original Dreamgirl</div>
+  <model-viewer
+    src="AvatarTest%20(1).glb"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    auto-rotate
+    shadow-intensity="1"
+    exposure="1"
+    bounds="tight"
+    disable-zoom
+    style="background: transparent;"
+  >
+    <button slot="ar-button" style="
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 16px 32px;
+      font-size: 1.3rem;
+      border-radius: 25px;
+      border: none;
+      background: #ff69b4;
+      color: #fff;
+      font-weight: bold;
+      box-shadow: 0 4px 16px #0004;
+      cursor: pointer;
+    ">
+      View in your space
+    </button>
+  </model-viewer>
 </body>
 </html>
