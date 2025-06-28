@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <title>Original Dreamgirl AR</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- model-viewer web component -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
-    /* Use your pixel/glitch font, make sure Silkscreen-Bold.ttf is present in your repo */
     @font-face {
       font-family: 'PixelFont';
       src: url('Silkscreen-Bold.ttf') format('truetype');
@@ -105,18 +105,6 @@
       height: auto;
       opacity: 0.8;
     }
-    /* Sparkle canvas overlay */
-    #sparkle-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
-      z-index: 100;
-      image-rendering: pixelated;
-      /* Will be toggled to display:none in AR */
-    }
   </style>
 </head>
 <body>
@@ -132,7 +120,6 @@
     shadow-intensity="0"
     autoplay
     animation-loop
-    environment-image="pillars_1k.hdr"
     exposure="2"
     style="width:100vw; height:100vh; background: transparent;"
   >
@@ -143,10 +130,9 @@
       View in your space
     </button>
     <div id="ar-prompt">
-      <img src="https://modelviewer.dev/shared-assets/icons/hand.png" alt="AR Prompt">
+      <img src="https://modelviewer.dev/shared-assets/icons/hand.png">
     </div>
   </model-viewer>
-  <canvas id="sparkle-canvas"></canvas>
   <script>
     // Progress bar logic for model-viewer
     const modelViewer = document.getElementById('dreamgirl-viewer');
@@ -165,89 +151,29 @@
     // AR prompt logic (show on AR activation)
     const arPrompt = document.getElementById('ar-prompt');
     modelViewer.addEventListener('ar-status', (event) => {
-      // Hide sparkles during AR
-      const sparkleCanvas = document.getElementById('sparkle-canvas');
       if (event.detail.status === 'session-started') {
         arPrompt.style.display = 'block';
-        sparkleCanvas.style.display = 'none';
       } else {
         arPrompt.style.display = 'none';
-        sparkleCanvas.style.display = 'block';
       }
     });
 
-    // Pixel Star Sparkle Overlay Logic
-    const STAR_COLORS = ['#fff', '#00fff9', '#ff69fa', '#fffd89', '#baffff', '#ff00b7'];
-    function drawPixelStar(ctx, x, y, size, color) {
-      ctx.save();
-      ctx.globalAlpha = 0.7 + 0.3 * Math.random();
-      ctx.fillStyle = color;
-      ctx.fillRect(x, y, size, size);
-      ctx.fillRect(x - size, y, size, size);
-      ctx.fillRect(x + size, y, size, size);
-      ctx.fillRect(x, y - size, size, size);
-      ctx.fillRect(x, y + size, size, size);
-      if (Math.random() > 0.5) {
-        ctx.fillRect(x - size, y - size, size, size);
-        ctx.fillRect(x + size, y - size, size, size);
-        ctx.fillRect(x - size, y + size, size, size);
-        ctx.fillRect(x + size, y + size, size, size);
-      }
-      ctx.restore();
-    }
-
-    function createStar(canvas) {
-      const size = 2 + Math.floor(Math.random() * 3);
-      return {
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: -0.5 + Math.random() * 1.0,
-        vy: 0.4 + Math.random() * 0.6,
-        size,
-        color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
-        tw: Math.random() * 2 * Math.PI,
-        tws: 0.07 + Math.random() * 0.06
-      };
-    }
-
-    const STAR_COUNT = 70;
-    const stars = [];
-
-    function resizeCanvasToWindow(canvas) {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-
-    function sparkleLoop() {
-      const canvas = document.getElementById('sparkle-canvas');
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (const star of stars) {
-        const twinkle = 0.7 + 0.3 * Math.sin(star.tw);
-        drawPixelStar(ctx, star.x, star.y, star.size * twinkle, star.color);
-        star.x += star.vx;
-        star.y += star.vy;
-        star.tw += star.tws;
-        if (star.x < -10 || star.x > canvas.width + 10 || star.y > canvas.height + 10) {
-          Object.assign(star, createStar(canvas));
-          star.y = -10;
-        }
-      }
-      requestAnimationFrame(sparkleLoop);
-    }
-
+    // Directly launch AR on load if supported
     window.addEventListener('DOMContentLoaded', () => {
-      const canvas = document.getElementById('sparkle-canvas');
-      resizeCanvasToWindow(canvas);
-      stars.length = 0;
-      for (let i = 0; i < STAR_COUNT; i++) {
-        stars.push(createStar(canvas));
-      }
-      sparkleLoop();
-    });
-    window.addEventListener('resize', () => {
-      const canvas = document.getElementById('sparkle-canvas');
-      resizeCanvasToWindow(canvas);
+      // Wait a tick to ensure model-viewer is upgraded
+      setTimeout(() => {
+        // Attempt to launch AR automatically (works on Android Chrome & iOS Safari with user gesture)
+        // Most browsers require a user gesture; so auto-launch may only work after first tap.
+        if (modelViewer.canActivateAR) {
+          modelViewer.activateAR();
+        } else {
+          // fallback: try again on first user tap anywhere
+          document.body.addEventListener('click', function tryAR() {
+            modelViewer.activateAR();
+            document.body.removeEventListener('click', tryAR);
+          });
+        }
+      }, 500);
     });
   </script>
 </body>
