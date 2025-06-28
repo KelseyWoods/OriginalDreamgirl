@@ -4,14 +4,21 @@
   <meta charset="UTF-8">
   <title>Original Dreamgirl AR</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 8th Wall or mindar.js are popular for web AR, but we'll use model-viewer for simplicity and browser compatibility -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
+    /* Use a pixel/glitch font from your repo, example: 'Pixeled.ttf' */
+    @font-face {
+      font-family: 'PixelFont';
+      src: url('Pixeled.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
     body {
       margin: 0;
       overflow: hidden;
       background: #000;
-      font-family: sans-serif;
+      font-family: 'PixelFont', 'Arial Black', Arial, sans-serif;
     }
     .overlay-text {
       position: absolute;
@@ -22,33 +29,52 @@
       color: #fff;
       font-size: 8vw;
       font-weight: bold;
-      text-shadow: 0 2px 16px #000, 0 4px 32px #333;
+      letter-spacing: 0.12em;
       pointer-events: none;
       z-index: 10;
-      font-family: 'Arial Black', Arial, sans-serif;
+      font-family: 'PixelFont', 'Arial Black', Arial, sans-serif;
+      user-select: none;
+      /* Reduced glow and more pixelated effect */
+      text-shadow:
+        0 2px 0 #00fff9,
+        2px 0 0 #00fff9,
+        -2px 0 0 #00fff9,
+        0 -2px 0 #00fff9;
+      filter: none;
+      /* Glitch animation */
+      animation: glitch 2.2s infinite linear alternate-reverse;
     }
-    model-viewer {
-      width: 100vw;
-      height: 100vh;
-      --progress-bar-color: #ff69b4;
+    @keyframes glitch {
+      0% { transform: translate(0,0); }
+      8% { transform: translate(-2px,1px) skewX(-1deg); }
+      10% { transform: translate(2px,-2px) skewX(1deg); }
+      13% { transform: translate(-1px,2px) skewX(0deg);}
+      20% { transform: translate(2px,1px) skewX(-1deg);}
+      22% { transform: translate(-2px,0) skewX(1deg);}
+      25% { transform: translate(1px,-2px) skewX(0deg);}
+      30% { transform: translate(0,0);}
+      100% { transform: translate(0,0);}
     }
-  </style>
-</head>
-<body>
-  <div class="overlay-text">Original Dreamgirl</div>
-  <model-viewer
-    src="AvatarTest%20(1).glb"
-    ar
-    ar-modes="webxr scene-viewer quick-look"
-    camera-controls
-    auto-rotate
-    shadow-intensity="1"
-    exposure="1"
-    bounds="tight"
-    disable-zoom
-    style="background: transparent;"
-  >
-    <button slot="ar-button" style="
+    .progress-bar {
+      display: block;
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 20;
+    }
+    .progress-bar.hide {
+      display: none;
+    }
+    .update-bar {
+      background: #ff69b4;
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    #ar-button {
       position: absolute;
       bottom: 32px;
       left: 50%;
@@ -62,9 +88,176 @@
       font-weight: bold;
       box-shadow: 0 4px 16px #0004;
       cursor: pointer;
-    ">
+      z-index: 20;
+      font-family: 'PixelFont', 'Arial Black', Arial, sans-serif;
+      letter-spacing: 0.1em;
+      text-shadow: 1px 0 0 #00fff9, 0 1px 0 #00fff9;
+      filter: none;
+      animation: glitch 3.7s infinite linear alternate-reverse;
+    }
+    #ar-prompt {
+      position: absolute;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      display: none;
+    }
+    #ar-prompt img {
+      width: 40px;
+      height: auto;
+      opacity: 0.8;
+    }
+    /* Sparkle canvas overlay */
+    #sparkle-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 100;
+      image-rendering: pixelated;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="sparkle-canvas"></canvas>
+  <div class="overlay-text">Original Dreamgirl</div>
+  <model-viewer
+    id="dreamgirl-viewer"
+    src="AvatarTest (1).glb"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    tone-mapping="aces"
+    poster="poster.webp"
+    shadow-intensity="0"
+    autoplay
+    environment-image="pillars_1k.hdr"
+    exposure="2"
+    style="width:100vw; height:100vh; background: transparent;"
+  >
+    <div class="progress-bar hide" slot="progress-bar">
+      <div class="update-bar"></div>
+    </div>
+    <button slot="ar-button" id="ar-button">
       View in your space
     </button>
+    <div id="ar-prompt">
+      <img src="https://modelviewer.dev/shared-assets/icons/hand.png" alt="AR Prompt">
+    </div>
   </model-viewer>
+  <script>
+    // Progress bar logic for model-viewer
+    const modelViewer = document.getElementById('dreamgirl-viewer');
+    const progressBar = modelViewer.querySelector('.progress-bar');
+    const updateBar = modelViewer.querySelector('.update-bar');
+    modelViewer.addEventListener('progress', (event) => {
+      const progress = event.detail.totalProgress;
+      if (progress < 1) {
+        progressBar.classList.remove('hide');
+        updateBar.style.width = `${progress * 100}%`;
+      } else {
+        progressBar.classList.add('hide');
+      }
+    });
+
+    // AR prompt logic (show on AR activation)
+    const arPrompt = document.getElementById('ar-prompt');
+    modelViewer.addEventListener('ar-status', (event) => {
+      if (event.detail.status === 'session-started') {
+        arPrompt.style.display = 'block';
+      } else {
+        arPrompt.style.display = 'none';
+      }
+    });
+
+    // Loop the animation
+    modelViewer.addEventListener('load', () => {
+      modelViewer.animationLoop = true;
+    });
+
+    // Pixel Star Sparkle Overlay Logic
+    const STAR_COLORS = ['#fff', '#00fff9', '#ff69fa', '#fffd89', '#baffff', '#ff00b7'];
+    function drawPixelStar(ctx, x, y, size, color) {
+      // Draw a pixelated cross/star
+      ctx.save();
+      ctx.globalAlpha = 0.7 + 0.3 * Math.random();
+      ctx.fillStyle = color;
+      // Center pixel
+      ctx.fillRect(x, y, size, size);
+      // Arms
+      ctx.fillRect(x - size, y, size, size);
+      ctx.fillRect(x + size, y, size, size);
+      ctx.fillRect(x, y - size, size, size);
+      ctx.fillRect(x, y + size, size, size);
+      // Optionally, corners for a more chunky star
+      if (Math.random() > 0.5) {
+        ctx.fillRect(x - size, y - size, size, size);
+        ctx.fillRect(x + size, y - size, size, size);
+        ctx.fillRect(x - size, y + size, size, size);
+        ctx.fillRect(x + size, y + size, size, size);
+      }
+      ctx.restore();
+    }
+
+    function createStar(canvas) {
+      const size = 2 + Math.floor(Math.random() * 3);
+      return {
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: -0.5 + Math.random() * 1.0,
+        vy: 0.4 + Math.random() * 0.6,
+        size,
+        color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
+        tw: Math.random() * 2 * Math.PI, // twinkle phase
+        tws: 0.07 + Math.random() * 0.06 // twinkle speed
+      };
+    }
+
+    const STAR_COUNT = 70;
+    const stars = [];
+
+    function resizeCanvasToWindow(canvas) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function sparkleLoop() {
+      const canvas = document.getElementById('sparkle-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const star of stars) {
+        // Twinkle
+        const twinkle = 0.7 + 0.3 * Math.sin(star.tw);
+        drawPixelStar(ctx, star.x, star.y, star.size * twinkle, star.color);
+        star.x += star.vx;
+        star.y += star.vy;
+        star.tw += star.tws;
+        // Respawn if out of bounds
+        if (star.x < -10 || star.x > canvas.width + 10 || star.y > canvas.height + 10) {
+          Object.assign(star, createStar(canvas));
+          star.y = -10; // respawn at top
+        }
+      }
+      requestAnimationFrame(sparkleLoop);
+    }
+
+    // Initialize stars and canvas
+    window.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('sparkle-canvas');
+      resizeCanvasToWindow(canvas);
+      stars.length = 0;
+      for (let i = 0; i < STAR_COUNT; i++) {
+        stars.push(createStar(canvas));
+      }
+      sparkleLoop();
+    });
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById('sparkle-canvas');
+      resizeCanvasToWindow(canvas);
+    });
+  </script>
 </body>
 </html>
