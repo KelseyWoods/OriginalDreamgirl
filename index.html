@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
+    /* Use your pixel/glitch font, make sure Silkscreen-Bold.ttf is present in your repo */
     @font-face {
       font-family: 'PixelFont';
       src: url('Silkscreen-Bold.ttf') format('truetype');
@@ -104,6 +105,7 @@
       height: auto;
       opacity: 0.8;
     }
+    /* Sparkle canvas overlay */
     #sparkle-canvas {
       position: fixed;
       top: 0;
@@ -113,11 +115,11 @@
       pointer-events: none;
       z-index: 100;
       image-rendering: pixelated;
+      /* Will be toggled to display:none in AR */
     }
   </style>
 </head>
 <body>
-  <canvas id="sparkle-canvas"></canvas>
   <div class="overlay-text">Original Dreamgirl</div>
   <model-viewer
     id="dreamgirl-viewer"
@@ -141,9 +143,10 @@
       View in your space
     </button>
     <div id="ar-prompt">
-      <img src="https://modelviewer.dev/shared-assets/icons/hand.png">
+      <img src="https://modelviewer.dev/shared-assets/icons/hand.png" alt="AR Prompt">
     </div>
   </model-viewer>
+  <canvas id="sparkle-canvas"></canvas>
   <script>
     // Progress bar logic for model-viewer
     const modelViewer = document.getElementById('dreamgirl-viewer');
@@ -162,10 +165,14 @@
     // AR prompt logic (show on AR activation)
     const arPrompt = document.getElementById('ar-prompt');
     modelViewer.addEventListener('ar-status', (event) => {
+      // Hide sparkles during AR
+      const sparkleCanvas = document.getElementById('sparkle-canvas');
       if (event.detail.status === 'session-started') {
         arPrompt.style.display = 'block';
+        sparkleCanvas.style.display = 'none';
       } else {
         arPrompt.style.display = 'none';
+        sparkleCanvas.style.display = 'block';
       }
     });
 
