@@ -6,14 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
-    /* Use a pixel/glitch font from your repo, example: 'Pixeled.ttf' */
     @font-face {
       font-family: 'PixelFont';
       src: url('Silkscreen-Bold.ttf') format('truetype');
       font-weight: normal;
       font-style: normal;
     }
-
     body {
       margin: 0;
       overflow: hidden;
@@ -32,16 +30,14 @@
       letter-spacing: 0.12em;
       pointer-events: none;
       z-index: 10;
-      font-family: 'Silkscreen-Bold.ttf', 'Arial Black', Arial, sans-serif;
+      font-family: 'PixelFont', 'Arial Black', Arial, sans-serif;
       user-select: none;
-      /* Reduced glow and more pixelated effect */
       text-shadow:
         0 2px 0 #00fff9,
         2px 0 0 #00fff9,
         -2px 0 0 #00fff9,
         0 -2px 0 #00fff9;
       filter: none;
-      /* Glitch animation */
       animation: glitch 2.2s infinite linear alternate-reverse;
     }
     @keyframes glitch {
@@ -108,7 +104,6 @@
       height: auto;
       opacity: 0.8;
     }
-    /* Sparkle canvas overlay */
     #sparkle-canvas {
       position: fixed;
       top: 0;
@@ -125,34 +120,30 @@
   <canvas id="sparkle-canvas"></canvas>
   <div class="overlay-text">Original Dreamgirl</div>
   <model-viewer
-  id="dreamgirl-viewer"
-  src="AvatarTest%(1).glb"
-  ar
-  ar-modes="webxr scene-viewer quick-look"
-  camera-controls
-  tone-mapping="aces"
-  poster="poster.webp"
-  shadow-intensity="0"
-  autoplay
-  environment-image="pillars_1k.hdr"
-  exposure="2"
->
-  <div class="progress-bar hide" slot="progress-bar">
-    <div class="update-bar"></div>
-  </div>
-  <button slot="ar-button" id="ar-button">
-    View in your space
-  </button>
-  <div id="ar-prompt">
-    <img src="https://modelviewer.dev/shared-assets/icons/hand.png">
-  </div>
-</model-viewer>
-<script>
-  document.getElementById('dreamgirl-viewer').addEventListener('load', function() {
-    this.animationLoop = true;
-  });
-</script>
-
+    id="dreamgirl-viewer"
+    src="AvatarTest%20(1).glb"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    tone-mapping="aces"
+    poster="poster.webp"
+    shadow-intensity="0"
+    autoplay
+    animation-loop
+    environment-image="pillars_1k.hdr"
+    exposure="2"
+    style="width:100vw; height:100vh; background: transparent;"
+  >
+    <div class="progress-bar hide" slot="progress-bar">
+      <div class="update-bar"></div>
+    </div>
+    <button slot="ar-button" id="ar-button">
+      View in your space
+    </button>
+    <div id="ar-prompt">
+      <img src="https://modelviewer.dev/shared-assets/icons/hand.png">
+    </div>
+  </model-viewer>
   <script>
     // Progress bar logic for model-viewer
     const modelViewer = document.getElementById('dreamgirl-viewer');
@@ -178,26 +169,17 @@
       }
     });
 
-    // Loop the animation
-    modelViewer.addEventListener('load', () => {
-      modelViewer.animationLoop = true;
-    });
-
     // Pixel Star Sparkle Overlay Logic
     const STAR_COLORS = ['#fff', '#00fff9', '#ff69fa', '#fffd89', '#baffff', '#ff00b7'];
     function drawPixelStar(ctx, x, y, size, color) {
-      // Draw a pixelated cross/star
       ctx.save();
       ctx.globalAlpha = 0.7 + 0.3 * Math.random();
       ctx.fillStyle = color;
-      // Center pixel
       ctx.fillRect(x, y, size, size);
-      // Arms
       ctx.fillRect(x - size, y, size, size);
       ctx.fillRect(x + size, y, size, size);
       ctx.fillRect(x, y - size, size, size);
       ctx.fillRect(x, y + size, size, size);
-      // Optionally, corners for a more chunky star
       if (Math.random() > 0.5) {
         ctx.fillRect(x - size, y - size, size, size);
         ctx.fillRect(x + size, y - size, size, size);
@@ -216,8 +198,8 @@
         vy: 0.4 + Math.random() * 0.6,
         size,
         color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
-        tw: Math.random() * 2 * Math.PI, // twinkle phase
-        tws: 0.07 + Math.random() * 0.06 // twinkle speed
+        tw: Math.random() * 2 * Math.PI,
+        tws: 0.07 + Math.random() * 0.06
       };
     }
 
@@ -234,22 +216,19 @@
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (const star of stars) {
-        // Twinkle
         const twinkle = 0.7 + 0.3 * Math.sin(star.tw);
         drawPixelStar(ctx, star.x, star.y, star.size * twinkle, star.color);
         star.x += star.vx;
         star.y += star.vy;
         star.tw += star.tws;
-        // Respawn if out of bounds
         if (star.x < -10 || star.x > canvas.width + 10 || star.y > canvas.height + 10) {
           Object.assign(star, createStar(canvas));
-          star.y = -10; // respawn at top
+          star.y = -10;
         }
       }
       requestAnimationFrame(sparkleLoop);
     }
 
-    // Initialize stars and canvas
     window.addEventListener('DOMContentLoaded', () => {
       const canvas = document.getElementById('sparkle-canvas');
       resizeCanvasToWindow(canvas);
