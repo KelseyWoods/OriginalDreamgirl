@@ -104,6 +104,17 @@
       width: 40px;
       height: auto;
       opacity: 0.8;
+    } 
+    /* Sparkle canvas overlay */
+    #sparkle-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 101;
+      image-rendering: pixelated;
     }
   </style>
 </head>
@@ -157,23 +168,73 @@
         arPrompt.style.display = 'none';
       }
     });
-
-    // Directly launch AR on load if supported
-    window.addEventListener('DOMContentLoaded', () => {
-      // Wait a tick to ensure model-viewer is upgraded
-      setTimeout(() => {
-        // Attempt to launch AR automatically (works on Android Chrome & iOS Safari with user gesture)
-        // Most browsers require a user gesture; so auto-launch may only work after first tap.
-        if (modelViewer.canActivateAR) {
-          modelViewer.activateAR();
-        } else {
-          // fallback: try again on first user tap anywhere
-          document.body.addEventListener('click', function tryAR() {
-            modelViewer.activateAR();
-            document.body.removeEventListener('click', tryAR);
-          });
+          }} // Pixel Star Sparkle Overlay Logic
+    const STAR_COLORS = ['#fff', '#00fff9', '#ff69fa', '#fffd89', '#baffff', '#ff00b7'];
+    function drawPixelStar(ctx, x, y, size, color) {
+      ctx.save();
+      ctx.globalAlpha = 0.7 + 0.3 * Math.random();
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, size, size);
+      ctx.fillRect(x - size, y, size, size);
+      ctx.fillRect(x + size, y, size, size);
+      ctx.fillRect(x, y - size, size, size);
+      ctx.fillRect(x, y + size, size, size);
+      if (Math.random() > 0.5) {
+        ctx.fillRect(x - size, y - size, size, size);
+        ctx.fillRect(x + size, y - size, size, size);
+        ctx.fillRect(x - size, y + size, size, size);
+        ctx.fillRect(x + size, y + size, size, size);
+      }
+      ctx.restore();
+    }
+    function createStar(canvas) {
+      const size = 2 + Math.floor(Math.random() * 3);
+      return {
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: -0.5 + Math.random() * 1.0,
+        vy: 0.4 + Math.random() * 0.6,
+        size,
+        color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
+        tw: Math.random() * 2 * Math.PI,
+        tws: 0.07 + Math.random() * 0.06
+      };
+    }
+    const STAR_COUNT = 70;
+    const stars = [];
+    function resizeCanvasToWindow(canvas) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    function sparkleLoop() {
+      const canvas = document.getElementById('sparkle-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const star of stars) {
+        const twinkle = 0.7 + 0.3 * Math.sin(star.tw);
+        drawPixelStar(ctx, star.x, star.y, star.size * twinkle, star.color);
+        star.x += star.vx;
+        star.y += star.vy;
+        star.tw += star.tws;
+        if (star.x < -10 || star.x > canvas.width + 10 || star.y > canvas.height + 10) {
+          Object.assign(star, createStar(canvas));
+          star.y = -10;
         }
-      }, 500);
+      }
+      requestAnimationFrame(sparkleLoop);
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('sparkle-canvas');
+      resizeCanvasToWindow(canvas);
+      stars.length = 0;
+      for (let i = 0; i < STAR_COUNT; i++) {
+        stars.push(createStar(canvas));
+      }
+      sparkleLoop();
+    });
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById('sparkle-canvas');
+      resizeCanvasToWindow(canvas);
     });
   </script>
 </body>
